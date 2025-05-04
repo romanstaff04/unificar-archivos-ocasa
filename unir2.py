@@ -5,6 +5,8 @@ import os
 las columnas "E y "F" las trae vacias.
 Columna AM entregado/retirado los elimina.
 Columna AN elimina los datos distintos del codigo iata
+filtra por peso mayor o igual a 200kg y 503 columna "s"
+filtra por volumen mayor o igual a 1.5 y 503 columna "s"
 """
 
 def borrar():
@@ -27,6 +29,14 @@ def borrar():
 def ejecutarExcelFinalizado(iata):
     os.startfile(f"archivoUnificado{iata}.xlsx")
 
+def manipularDatos(df):
+    df.loc[df["Peso del objeto"] >= 200, "Ruta Virtual"] = 503
+    df.loc[df["Volumen"] >= 1.5, "Ruta Virtual"] = 503
+    df = df[df["Motivo Descripción"] != "Retirado"]
+    df = df[df["Motivo Descripción"] != "Entregado"]
+    df = df[df["Destino"] == iata]
+    df["Distrito Destino"] = ""
+    df["Provincia"] = ""
 
 while True:
     iata = input("Ingresa el codigo IATA: ").upper()
@@ -41,13 +51,8 @@ for archivo in encontrar:
     lista.append(leer)
 df = pd.concat(lista, ignore_index = True)
 
-"""manipulacion de datos"""
-df = df[df["Motivo Descripción"] != "Retirado"]
-df = df[df["Motivo Descripción"] != "Entregado"]
-df = df[df["Destino"] == iata]
-df["Distrito Destino"] = ""
-df["Provincia"] = ""
-print(df)
-#df.to_excel(f"archivoUnificado{iata}.xlsx", index = False)
-#borrar()
-#ejecutarExcelFinalizado(iata)
+manipularDatos(df)
+
+df.to_excel(f"archivoUnificado{iata}.xlsx", index = False)
+borrar()
+ejecutarExcelFinalizado(iata)
