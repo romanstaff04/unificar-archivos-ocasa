@@ -37,6 +37,7 @@ def manipularDatos(df):
     df = df[df["Destino"] == iata]
     df["Distrito Destino"] = ""
     df["Provincia"] = ""
+    return df
 
 while True:
     iata = input("Ingresa el codigo IATA: ").upper()
@@ -51,7 +52,7 @@ for archivo in encontrar:
     lista.append(leer)
 df = pd.concat(lista, ignore_index = True)
 
-manipularDatos(df)
+df = manipularDatos(df)
 
 df.to_excel(f"archivoUnificado{iata}.xlsx", index = False)
 borrar()
