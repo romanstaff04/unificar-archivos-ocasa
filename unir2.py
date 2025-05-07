@@ -1,6 +1,19 @@
 import pandas as pd
 import glob
 import os
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+
+def marcarDuplicadosEnExcel(nombre_archivo, duplicados):
+    wb = load_workbook(nombre_archivo)
+    ws = wb.active
+    rojo = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
+
+    for i, es_duplicado in enumerate(duplicados, start=2):
+        if es_duplicado:
+            ws[f"Y{i}"].fill = rojo  # Ajusta la letra según la columna real
+
+    wb.save(nombre_archivo)
 
 def borrarORG(df):
     while True:
@@ -15,7 +28,7 @@ def borrarORG(df):
             print("error intente nuevamente")
     return df
 
-def borrar():
+def borrarMHTML():
     while True:
         pregunta = input("queres borrar los archivos MHTML?: S/N ").lower()
         if pregunta == "s":
@@ -50,7 +63,9 @@ def manipularDatos(df, iata):
     #limpiar columnas
     df["Distrito Destino"] = ""
     df["Provincia"] = ""
-    return df 
+
+    duplicados = df.duplicated(subset= "Nro. identificación pieza según cliente", keep = False)
+    return df, duplicados
 
 def main():
     while True:
@@ -67,11 +82,12 @@ def main():
         lista.append(leer)
     
     df = pd.concat(lista, ignore_index=True)
-    df = manipularDatos(df, iata)
+    df, duplicados  = manipularDatos(df, iata)
     df = borrarORG(df)  
     
     df.to_excel(f"archivoUnificado{iata}.xlsx", index=False)
-    borrar()
+    marcarDuplicadosEnExcel(f"archivoUnificado{iata}.xlsx", duplicados)
+    borrarMHTML()
     ejecutarExcelFinalizado(iata)
 
 if __name__ == "__main__": 
