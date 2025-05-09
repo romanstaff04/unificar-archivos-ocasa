@@ -4,31 +4,28 @@ import os
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
-def marcarDuplicadosEnExcel(nombre_archivo, duplicados):
+"""def marcarDuplicadosEnExcel(nombre_archivo, duplicados):
     wb = load_workbook(nombre_archivo)
     ws = wb.active
     rojo = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
 
     for i, es_duplicado in enumerate(duplicados, start=2):
         if es_duplicado:
-            ws[f"Y{i}"].fill = rojo  # Ajusta la letra según la columna real
+            ws[f"Y{i}"].fill = rojo
+    wb.save(nombre_archivo)"""
 
-    wb.save(nombre_archivo)
-
-def borrarORG(df):
-    while True:
-        borrar = input("ORG COURRIER = 700? : S/ N: ").lower()
-        if borrar == "s":
+def borrarORG(df, iata):
+    if iata == "crd".upper():
             df.loc[df["Nombre Solicitante"] == "ORG COURIER ARG", "Ruta Virtual"] = 700
-            break
-        elif borrar == "n":
-            print("org courier no borrado")
-            break
-        else:
-            print("error intente nuevamente")
+    elif iata == "luq".upper():
+        df.loc[df["Nombre Solicitante"] == "ORG COURIER ARG", "Ruta Virtual"] = 700
+    elif iata == "irj".upper():
+        pass
+    else:
+        print("error")
     return df
 
-def borrarMHTML():
+def borrarMHTML(): #si encuentra archivos mhtml preguntar si lo queres borrar
     while True:
         pregunta = input("queres borrar los archivos MHTML?: S/N ").lower()
         if pregunta == "s":
@@ -74,21 +71,64 @@ def main():
             break
         else:
             print("error intente nuevametne")
-    
-    encontrar = glob.glob("*xlsx")
-    lista = []
-    for archivo in encontrar:
-        leer = pd.read_excel(archivo)
-        lista.append(leer)
-    
-    df = pd.concat(lista, ignore_index=True)
-    df, duplicados  = manipularDatos(df, iata)
-    df = borrarORG(df)  
-    
-    df.to_excel(f"archivoUnificado{iata}.xlsx", index=False)
-    marcarDuplicadosEnExcel(f"archivoUnificado{iata}.xlsx", duplicados)
-    borrarMHTML()
-    ejecutarExcelFinalizado(iata)
 
+    if iata == "crd".upper(): #listo
+        encontrar = glob.glob("*xlsx")
+        lista = []
+        for archivo in encontrar:
+            leer = pd.read_excel(archivo)
+            lista.append(leer)
+        
+        df = pd.concat(lista, ignore_index=True)
+        df, duplicados  = manipularDatos(df, iata)
+        df = borrarORG(df, iata)  
+        
+        df.to_excel(f"archivoUnificado{iata}.xlsx", index=False)
+        #marcarDuplicadosEnExcel(f"archivoUnificado{iata}.xlsx", duplicados)
+        borrarMHTML()
+        ejecutarExcelFinalizado(iata)
+
+    elif iata == "luq".upper(): # listo
+        encontrar = glob.glob("*xlsx")
+        lista = []
+        for archivo in encontrar:
+            leer = pd.read_excel(archivo)
+            lista.append(leer)
+        
+        df = pd.concat(lista, ignore_index=True)
+        df, duplicados  = manipularDatos(df, iata)
+        df = borrarORG(df, iata)  
+        
+        df.to_excel(f"archivoUnificado{iata}.xlsx", index=False)
+        #marcarDuplicadosEnExcel(f"archivoUnificado{iata}.xlsx", duplicados)
+        borrarMHTML()
+        ejecutarExcelFinalizado(iata)
+
+    elif iata == "irj".upper():
+        encontrar = glob.glob("*xlsx")
+        lista = []
+        for archivo in encontrar:
+            leer = pd.read_excel(archivo)
+            lista.append(leer)
+        df = pd.concat(lista, ignore_index=True)
+        #solo vaciar columnas 
+        df["Distrito Destino"] = ""
+        df["Provincia"] = ""
+        df.to_excel(f"archivoUnificado{iata}.xlsx", index=False)
+        borrarMHTML()
+        ejecutarExcelFinalizado(iata)
+    
+    elif iata == "fma".upper():
+        encontrar = glob.glob("*xlsx")
+        lista = []
+        for archivo in encontrar:
+            leer = pd.read_excel(archivo)
+            lista.append(leer)
+        df = pd.concat(lista, ignore_index=True)
+        df = manipularDatos(df, iata)
+        
+
+    else:
+        print("error")
 if __name__ == "__main__": 
     main()
