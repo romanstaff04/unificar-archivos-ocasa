@@ -1,23 +1,25 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
 import pandas as pd
 import glob
 import os
 
 def borrarMHTML():
     encontrar = glob.glob("*MHTML")
-    if not encontrar:
-        print("No hay archivos MHTML para borrar.")
-        return
-    while True:
-        pregunta = input("¿Querés borrar los archivos MHTML?: S/N ").lower()
-        if pregunta == "s":
-            for archivo in encontrar:
-                os.remove(archivo)
-            print("Archivos MHTML borrados.")
-            break
-        elif pregunta == "n":
-            break
-        else:
-            print("Por favor, ingresá 's' o 'n'.")
+    for archivo in encontrar:
+        os.remove(archivo)
+
+def obtener_archivos():
+    return [archivo for archivo in glob.glob("*.xlsx") if archivo != "CANALIZADOR MADRE.xlsx"]
+
+def cargar_datos():
+    archivos = obtener_archivos()
+    if not archivos:
+        return None
+    lista = [pd.read_excel(archivo) for archivo in archivos]
+    df = pd.concat(lista, ignore_index=True)
+    return df
+
 
 def manipularDatos(df, iata):
     if iata == "FMA":
@@ -94,62 +96,6 @@ def manipularDatos(df, iata):
         pass
     return df
 
-def laRiojaIRJ():
-    encontrar = glob.glob("*.xlsx")
-    lista = []
-    for archivo in encontrar:
-        if archivo == "CANALIZADOR MADRE.xlsx":
-            continue
-        leer = pd.read_excel(archivo)
-        lista.append(leer)
-    if not lista:
-        print("No se encontraron archivos válidos para procesar.")
-        return None
-    df = pd.concat(lista, ignore_index=True)
-    return df
-
-def formosaFMA():
-    encontrar = glob.glob("*.xlsx")
-    lista = []
-    for archivo in encontrar:
-        if archivo == "CANALIZADOR MADRE.xlsx":
-            continue
-        leer = pd.read_excel(archivo)
-        lista.append(leer)
-    if not lista:
-        print("No se encontraron archivos válidos para procesar.")
-        return None
-    df = pd.concat(lista, ignore_index=True)
-    return df
-
-def sanLuisLUQ():
-    encontrar = glob.glob("*.xlsx")
-    lista = []
-    for archivo in encontrar:
-        if archivo == "CANALIZADOR MADRE.xlsx":
-            continue
-        leer = pd.read_excel(archivo)
-        lista.append(leer)
-    if not lista:
-        print("No se encontraron archivos válidos para procesar.")
-        return None
-    df = pd.concat(lista, ignore_index=True)
-    return df
-
-def comodoroRivadaviaCRD():
-    encontrar = glob.glob("*.xlsx")
-    lista = []
-    for archivo in encontrar:
-        if archivo == "CANALIZADOR MADRE.xlsx":
-            continue
-        leer = pd.read_excel(archivo)
-        lista.append(leer)
-    if not lista:
-        print("No se encontraron archivos válidos para procesar.")
-        return None
-    df = pd.concat(lista, ignore_index=True)
-    return df
-    
 def canalizadorLocalidad(df):
     # --- MERGE con CANALIZADOR para que traiga la localidad ---
         canalizadorLocalidad = pd.read_excel("CANALIZADOR MADRE.xlsx")
@@ -188,67 +134,47 @@ def canalizadorProvincia(df):
             print(f"Advertencia: no se encontró la columna '{columna_referencia}' para ubicar 'Provincia'. Se dejó al final.")
         return merge
 
-def main():
-    while True:
-        iata = input("Ingresa el codigo IATA: ").upper()
-        if len(iata) == 3:
-            break
+def procesar(iata):
+    df = cargar_datos(iata)
+    if df is None:
+        messagebox.showerror("Error", "No se encontraron archivos para procesar.")
+        return
+
+    df = manipularDatos(df, iata)
+    df = canalizadorLocalidad(df)
+    df = canalizadorProvincia(df)
+    borrarMHTML()
+
+    # Guardar y abrir archivo
+    nombre_salida = f"archivoUnificado{iata}.xlsx"
+    df.to_excel(nombre_salida, index=False)
+    os.startfile(nombre_salida)
+
+# --- Interfaz Gráfica ---
+def crear_interfaz():
+    ventana = tk.Tk()
+    ventana.title("Procesador de Ruteo por IATA")
+    ventana.geometry("400x200")
+
+    etiqueta = ttk.Label(ventana, text="Seleccione un código IATA:", font=("Arial", 12))
+    etiqueta.pack(pady=10)
+
+    opciones_iata = ["FMA", "IRJ", "CRD", "LUQ", "TUC", "RES"]
+    seleccion = tk.StringVar()
+    combobox = ttk.Combobox(ventana, textvariable=seleccion, values=opciones_iata, state="readonly")
+    combobox.pack(pady=5)
+
+    def ejecutar():
+        iata = seleccion.get()
+        if not iata:
+            messagebox.showwarning("Advertencia", "Debe seleccionar un código IATA.")
         else:
-            print("Error. Intente nuevamente.")
+            procesar(iata)
 
-    if iata == "CRD":
-        df = comodoroRivadaviaCRD()
-        if df is None:
-            return
-        df = manipularDatos(df, iata)
-        df = canalizadorLocalidad(df)
-        df = canalizadorProvincia(df)
-        borrarMHTML()
+    boton = ttk.Button(ventana, text="Procesar", command=ejecutar)
+    boton.pack(pady=20)
 
-        # Guardar y abrir
-        nombre_salida = f"archivoUnificado{iata}.xlsx"
-        df.to_excel(nombre_salida, index=False)
-        os.startfile(nombre_salida)
-
-    if iata == "LUQ":
-        df = sanLuisLUQ()
-        if df is None:
-            return
-        df = manipularDatos(df, iata)
-        df = canalizadorLocalidad(df)
-        df = canalizadorProvincia(df)
-        borrarMHTML()
-
-        # Guardar y abrir
-        nombre_salida = f"archivoUnificado{iata}.xlsx"
-        df.to_excel(nombre_salida, index=False)
-        os.startfile(nombre_salida)
-
-    if iata == "IRJ":
-        df = laRiojaIRJ()
-        if df is None:
-            return
-        df = manipularDatos(df, iata)
-        df = canalizadorLocalidad(df)
-        df = canalizadorProvincia(df)
-        borrarMHTML()
-
-        nombre_salida = f"archivoUnificado{iata}.xlsx"
-        df.to_excel(nombre_salida, index=False)
-        os.startfile(nombre_salida)
-    
-    if iata == "FMA":
-        df = formosaFMA()
-        if df is None:
-            return
-        df = manipularDatos(df, iata)
-        df = canalizadorLocalidad(df)
-        df = canalizadorProvincia(df)
-        borrarMHTML()
-
-        nombre_salida = f"archivoUnificado{iata}.xlsx"
-        df.to_excel(nombre_salida, index=False)
-        os.startfile(nombre_salida)
+    ventana.mainloop()
 
 if __name__ == "__main__":
-    main()
+    crear_interfaz()
