@@ -12,7 +12,7 @@ def borrarMHTML():
 def obtener_archivos():
     return [archivo for archivo in glob.glob("*.xlsx") if archivo != "CANALIZADOR MADRE.xlsx"]
 
-def cargar_datos():
+def cargar_datos(iata):
     archivos = obtener_archivos()
     if not archivos:
         return None
