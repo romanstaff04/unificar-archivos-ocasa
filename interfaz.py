@@ -8,6 +8,7 @@ def borrarMHTML():
     encontrar = glob.glob("*MHTML")
     for archivo in encontrar:
         os.remove(archivo)
+    print("se borraron archivos MHTML")
 
 def obtener_archivos():
     return [archivo for archivo in glob.glob("*.xlsx") if archivo != "CANALIZADOR MADRE.xlsx"]
@@ -20,8 +21,13 @@ def cargar_datos(iata):
     df = pd.concat(lista, ignore_index=True)
     return df
 
+def vaciarGeo(df):
+    condicion = (df["Calidad – GEO"] != "ROOFTOP") & (df["Calidad – GEO"] != "APPROXIMATE")
+    df.loc[condicion, ["Latitud", "Longitud"]] = ""
+    return df
 
 def manipularDatos(df, iata):
+    vaciarGeo(df)
     if iata == "FMA":
         #agregar valores
         df.loc[df["Nombre Solicitante"] == "TRANSFARMACO S.A.", "Ruta Virtual"] = 502
@@ -170,6 +176,7 @@ def crear_interfaz():
             messagebox.showwarning("Advertencia", "Debe seleccionar un código IATA.")
         else:
             procesar(iata)
+            ventana.destroy()
 
     boton = ttk.Button(ventana, text="Procesar", command=ejecutar)
     boton.pack(pady=20)
