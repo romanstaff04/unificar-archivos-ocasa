@@ -33,6 +33,23 @@ def vaciarGeo(df):
     df.loc[condicion, ["Latitud", "Longitud"]] = ""
     return df
 
+
+def manipularDatosGeneral(df, iata):
+    #vaciarGeo(df)
+    df.loc[df["Peso del objeto"] >= 200, "Ruta Virtual"] = 503
+    df.loc[df["Volumen"] >= 0.7, "Ruta Virtual"] = 503
+
+    df["Distrito Destino"] = ""
+    df["Provincia"] = ""
+
+    df = df[
+            (df["Motivo Descripción"] != "Retirado") & 
+            (df["Motivo Descripción"] != "Entregado") & 
+            (df["Destino"] == iata)
+        ].copy()
+    return df
+
+#esta funcion no la estoy usando
 def manipularDatos(df, iata):
     vaciarGeo(df)
     if iata == "FMA":
@@ -131,7 +148,7 @@ def procesar(iata):
         messagebox.showerror("Error", "No se encontraron archivos para procesar.")
         return
 
-    df = manipularDatos(df, iata)
+    df = manipularDatosGeneral(df, iata)
     df = canalizadorLocalidad(df)
     df = canalizadorProvincia(df)
     borrarMHTML()
@@ -148,7 +165,7 @@ def crear_interfaz():
     etiqueta = ttk.Label(ventana, text="Seleccione un código IATA:", font=("Arial", 12))
     etiqueta.pack(pady=10)
 
-    opciones_iata = ["FMA", "IRJ", "CRD", "LUQ", "TUC", "RES", "TOR"]
+    opciones_iata = ["FMA", "IRJ", "CRD", "LUQ", "TUC", "RES", "TOR", "REL", "PSS", "CTC", "ROS", "RGL", "FCO", "EQS"]
     seleccion = tk.StringVar()
     combobox = ttk.Combobox(ventana, textvariable=seleccion, values=opciones_iata, state="readonly")
     combobox.pack(pady=5)
