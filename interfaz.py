@@ -13,12 +13,14 @@ def obtener_ruta_recurso(nombre_archivo):
 
 def borrarMHTML():
     encontrar = glob.glob("*MHTML")
-    for archivo in encontrar:
-        os.remove(archivo)
-    print("se borraron archivos MHTML")
+    if encontrar:
+        for archivo in encontrar:
+            os.remove(archivo)
+        messagebox.showinfo("Operación completada", "Se borraron los archivos MHTML correctamente.")
+
 
 def obtener_archivos():
-    return [archivo for archivo in glob.glob("*.xlsx") if archivo != "CANALIZADOR MADRE.xlsx"]
+    return [archivo for archivo in glob.glob("*.xlsx") if archivo != "Canalizador con Provincia y Sucursal UM - ruteo JUNIO2025.xlsx"]
 
 def cargar_datos(iata):
     archivos = obtener_archivos()
@@ -33,7 +35,7 @@ def vaciarGeo(df):
     df.loc[condicion, ["Latitud", "Longitud"]] = ""
     return df
 
-
+#esta funcion no la estoy usando
 def manipularDatosGeneral(df, iata):
     #vaciarGeo(df)
     df.loc[df["Peso del objeto"] >= 200, "Ruta Virtual"] = 503
@@ -49,9 +51,15 @@ def manipularDatosGeneral(df, iata):
         ].copy()
     return df
 
-#esta funcion no la estoy usando
 def manipularDatos(df, iata):
-    vaciarGeo(df)
+    #vaciarGeo(df)
+    #eliminar duplicados en todas las sucursaless
+    duplicados = df.duplicated(subset = "Nro. identificación pieza según cliente", keep = "first")
+    df.loc[duplicados, "Nro. identificación pieza según cliente"] = df.loc[duplicados, "Equipo"]
+
+    if iata == "TOR":
+        df["Distrito Destino"] = ""
+        df["Provincia"] = ""
     if iata == "FMA":
         df.loc[df["Nombre Solicitante"] == "TRANSFARMACO S.A.", "Ruta Virtual"] = 502
         df.loc[df["Nombre Solicitante"] == "Fresenius Medical Care Argentina SA", "Ruta Virtual"] = 502
@@ -103,14 +111,12 @@ def manipularDatos(df, iata):
         df.loc[df["Volumen"] >= 0.7, "Ruta Virtual"] = 503
         df["Distrito Destino"] = ""
         df["Provincia"] = ""
-
     return df
 
 def canalizadorLocalidad(df):
-    ruta = obtener_ruta_recurso("CANALIZADOR MADRE.xlsx")
+    ruta = obtener_ruta_recurso("Canalizador con Provincia y Sucursal UM - ruteo JUNIO2025.xlsx")
     canalizador = pd.read_excel(ruta)
     canalizador_reducido = canalizador[["CP Destino", "Distrito Destino"]]
-
     df = df.drop(columns=["Distrito Destino"], errors="ignore")
     merge = pd.merge(df, canalizador_reducido, on="CP Destino", how="left")
 
@@ -125,9 +131,9 @@ def canalizadorLocalidad(df):
     return merge
 
 def canalizadorProvincia(df):
-    ruta = obtener_ruta_recurso("CANALIZADOR MADRE.xlsx")
+    ruta = obtener_ruta_recurso("Canalizador con Provincia y Sucursal UM - ruteo JUNIO2025.xlsx")
     canalizador = pd.read_excel(ruta)
-    canalizador_reducido = canalizador[["CP Destino", "Provincia"]]
+    canalizador_reducido = canalizador[["CP Destino", "Provincia", "ZONIFICACION"]]
 
     df = df.drop(columns=["Provincia"], errors="ignore")
     merge = pd.merge(df, canalizador_reducido, on="CP Destino", how="left")
@@ -148,7 +154,7 @@ def procesar(iata):
         messagebox.showerror("Error", "No se encontraron archivos para procesar.")
         return
 
-    df = manipularDatosGeneral(df, iata)
+    df = manipularDatos(df, iata)
     df = canalizadorLocalidad(df)
     df = canalizadorProvincia(df)
     borrarMHTML()
